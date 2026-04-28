@@ -41,11 +41,14 @@ export function renderGame(state, handlers) {
   back.addEventListener('click', handlers.onBack);
   hud.append(back);
   hud.append(el('div', 'level-title', state.level.name));
-  hud.append(el('div', 'spacer'));
+  const timer = el('div', 'timer', '00:00');
+  timer.id = 'timer';
+  hud.append(timer);
   wrap.append(hud);
 
   // Board
   const board = el('div', 'board');
+  board.id = 'board';
   state.stacks.forEach((stack, stackIdx) => {
     const col = el('div', 'col');
     stack.forEach((tile, depth) => {
@@ -53,8 +56,9 @@ export function renderGame(state, handlers) {
       t.style.transform = `translateY(${depth * -8}px)`;
       t.style.zIndex = String(depth);
       t.textContent = tile.type;
+      t.dataset.tileId = String(tile.id);
       if (depth === stack.length - 1) {
-        t.addEventListener('click', () => handlers.onPick(stackIdx));
+        t.addEventListener('click', () => handlers.onPick(stackIdx, t));
       }
       col.append(t);
     });
@@ -65,12 +69,15 @@ export function renderGame(state, handlers) {
 
   // Tray
   const tray = el('div', 'tray');
+  tray.id = 'tray';
   for (let i = 0; i < TRAY_LIMIT; i++) {
     const slot = el('div', 'slot');
+    slot.dataset.slotIdx = String(i);
     const tile = state.tray[i];
     if (tile) {
       slot.classList.add('filled');
       slot.textContent = tile.type;
+      slot.dataset.tileId = String(tile.id);
     }
     tray.append(slot);
   }

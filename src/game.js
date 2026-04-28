@@ -52,16 +52,22 @@ export function generateBoard(level) {
 }
 
 export function pickTile(state, stackIdx) {
-  if (state.status !== 'playing') return false;
+  if (state.status !== 'playing') return null;
   const stack = state.stacks[stackIdx];
-  if (!stack || stack.length === 0) return false;
-  if (state.tray.length >= TRAY_LIMIT) return false;
+  if (!stack || stack.length === 0) return null;
+  if (state.tray.length >= TRAY_LIMIT) return null;
   const tile = stack.pop();
   state.tray.push(tile);
   state.history.push({ type: 'pick', stackIdx, tile });
+  return tile;
+}
+
+export function applyResolution(state) {
+  const before = state.tray.length;
   resolveMatches(state);
+  const matched = state.tray.length < before;
   checkEnd(state);
-  return true;
+  return matched;
 }
 
 export function resolveMatches(state) {
