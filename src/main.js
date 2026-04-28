@@ -21,6 +21,7 @@ import {
   sfxPick, sfxMatch, sfxWin, sfxLose, sfxItem,
   isMuted, toggleMute, unlockAudio,
 } from './audio.js';
+import { identify, track } from './analytics.js';
 
 const tg = window.Telegram?.WebApp;
 let save = loadSave();
@@ -32,6 +33,15 @@ if (tg) {
   tg.ready();
   tg.expand();
 }
+
+// 埋点身份
+const tgUser = tg?.initDataUnsafe?.user;
+if (tgUser) identify(tgUser);
+track('app_loaded', {
+  has_telegram_user: !!tgUser,
+  platform: tg?.platform || 'web',
+  color_scheme: tg?.colorScheme || 'unknown',
+});
 
 // 解锁 AudioContext（浏览器要求首次手势触发）
 window.addEventListener('pointerdown', unlockAudio, { once: true });
@@ -78,7 +88,9 @@ function startLevel(levelIdx) {
   state = createGameState(level);
   state.levelIdx = levelIdx;
   state.stacks = generateBoard(level);
+  state.itemsUsed = { undo: 0, shuffle: 0, remove3: 0 };
   busy = false;
+  track('level_start', { level_id: level.id, level_name: level.name });
   drawGame();
   startTimer();
 }
@@ -89,11 +101,18 @@ function drawGame() {
     onPick: (stackIdx, tileEl) => onPick(stackIdx, tileEl),
     onUndo: () => {
       if (busy) return;
-      if (useUndo(state)) { sfxItem(); drawGame(); }
+      if (useUndo(state)) {
+        state.itemsUsed.undo++;
+        track('item_used', { item: 'undo', level_id: state.level.id });
+        sfxItem();
+        drawGame();
+      }
     },
     onShuffle: () => {
       if (busy) return;
       if (useShuffle(state)) {
+        state.itemsUsed.shuffle++;
+        track('item_used', { item: 'shuffle', level_id: state.level.id });
         sfxItem();
         haptic('match');
         drawGame();
@@ -103,6 +122,8 @@ function drawGame() {
     onRemove3: () => {
       if (busy) return;
       if (useRemove3(state)) {
+        state.itemsUsed.remove3++;
+        track('item_used', { item: 'remove3', level_id: state.level.id });
         sfxItem();
         haptic('match');
         drawGame();
@@ -111,6 +132,7 @@ function drawGame() {
     },
     onToggleMute: () => {
       const m = toggleMute();
+      track('mute_toggled', { muted: m });
       const btn = document.getElementById('mute-btn');
       if (btn) btn.textContent = m ? '🔇' : '🔊';
     },
@@ -202,6 +224,13 @@ function finishTurn() {
     if (window.confetti) {
       window.confetti({ particleCount: 160, spread: 100, origin: { y: 0.6 } });
     }
+    track('level_win', {
+      level_id: state.level.id,
+      elapsed_ms: state.elapsedMs,
+      undo_used: state.itemsUsed?.undo || 0,
+      shuffle_used: state.itemsUsed?.shuffle || 0,
+      remove3_used: state.itemsUsed?.remove3 || 0,
+    });
     markLevelCompleted(save, state.levelIdx);
     showResultModal(
       {
@@ -219,6 +248,14 @@ function finishTurn() {
     stopTimer();
     sfxLose();
     haptic('lose');
+    track('level_lose', {
+      level_id: state.level.id,
+      elapsed_ms: state.elapsedMs,
+      tray_size: state.tray.length,
+      undo_used: state.itemsUsed?.undo || 0,
+      shuffle_used: state.itemsUsed?.shuffle || 0,
+      remove3_used: state.itemsUsed?.remove3 || 0,
+    });
     showResultModal(
       { won: false, elapsedMs: state.elapsedMs, hasNext: false },
       {
