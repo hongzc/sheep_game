@@ -14,23 +14,34 @@ export function renderLevelSelect(save, onPick) {
   LEVELS.forEach((lv, i) => {
     if (i > save.highestUnlocked) return; // 隐藏未解锁
     const completed = save.completedLevels[i];
-    const card = el('button', 'level-card');
-    card.append(el('div', 'level-name', lv.name));
-    const meta = el('div', 'level-meta');
-    meta.append(el('span', 'meta-item', `${lv.heights.length} 列`));
-    meta.append(el('span', 'meta-item', `${lv.heights.reduce((a, b) => a + b, 0)} 张`));
-    meta.append(el('span', 'meta-item', `${lv.typesCount} 种`));
-    card.append(meta);
-    if (completed) card.append(el('div', 'level-badge', '✓ 已通关'));
+    const card = el('button', 'level-card' + (completed ? ' completed' : ''));
+    card.style.animationDelay = `${i * 60}ms`;
+
+    const num = el('div', 'level-num');
+    num.append(el('span', 'level-num-text', String(lv.id).padStart(2, '0')));
+    if (completed) num.append(el('div', 'level-num-check', '✓'));
+    card.append(num);
+
+    const main = el('div', 'level-main');
+    main.append(el('div', 'level-name', `第 ${lv.id} 关 · ${lv.name}`));
+    const stars = el('div', 'level-stars');
+    for (let s = 1; s <= 5; s++) {
+      stars.append(el('span', 'star' + (s <= lv.difficulty ? ' on' : ''), '★'));
+    }
+    main.append(stars);
+    card.append(main);
+
+    card.append(el('div', 'level-arrow', '›'));
+
     card.addEventListener('click', () => onPick(i));
     list.append(card);
   });
   wrap.append(list);
   const remaining = LEVELS.length - 1 - save.highestUnlocked;
   if (remaining > 0) {
-    wrap.append(el('p', 'lock-hint', `通关后解锁下一关 · 剩余 ${remaining} 关待解锁`));
+    wrap.append(el('p', 'lock-hint', `通关后解锁下一关 · 剩余 ${remaining} 关待挑战`));
   } else {
-    wrap.append(el('p', 'lock-hint', '🏆 全关卡已解锁'));
+    wrap.append(el('p', 'lock-hint', '🏆 全关卡已通关'));
   }
   root.append(wrap);
 }
@@ -58,11 +69,15 @@ export function renderGame(state, handlers) {
   // Board
   const board = el('div', 'board');
   board.id = 'board';
+  const cols = state.stacks.length;
+  const maxStack = Math.max(...state.level.heights);
+  board.style.setProperty('--cols', String(cols));
+  board.style.setProperty('--max-stack', String(maxStack));
   state.stacks.forEach((stack, stackIdx) => {
     const col = el('div', 'col');
     stack.forEach((tile, depth) => {
       const t = el('div', 'tile' + (depth === stack.length - 1 ? ' top' : ''));
-      t.style.transform = `translateY(${depth * -8}px)`;
+      t.style.transform = `translateY(${depth * -6}px)`;
       t.style.zIndex = String(depth);
       t.textContent = tile.type;
       t.dataset.tileId = String(tile.id);
@@ -129,12 +144,15 @@ export function showResultModal({ won, elapsedMs, hasNext }, handlers) {
     next.addEventListener('click', handlers.onNext);
     actions.append(next);
   }
-  const retry = el('button', 'btn', won ? '再玩一次' : '重试');
+  const retry = el('button', 'btn' + (won ? '' : ' primary'), won ? '再玩一次' : '重试');
   retry.addEventListener('click', handlers.onRetry);
   actions.append(retry);
-  const home = el('button', 'btn', '关卡选择');
-  home.addEventListener('click', handlers.onHome);
-  actions.append(home);
+  // 通关后不显示关卡选择按钮（已通过 modal 完成关卡）
+  if (!won) {
+    const home = el('button', 'btn', '关卡选择');
+    home.addEventListener('click', handlers.onHome);
+    actions.append(home);
+  }
   modal.append(actions);
   overlay.append(modal);
   root.append(overlay);
