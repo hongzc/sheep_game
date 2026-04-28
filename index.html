@@ -2,118 +2,13 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Sheep Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Triple Pop</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root {
-      --bg: var(--tg-theme-bg-color, #ffffff);
-      --text: var(--tg-theme-text-color, #000000);
-      --hint: var(--tg-theme-hint-color, #707579);
-      --btn-bg: var(--tg-theme-button-color, #2481cc);
-      --btn-text: var(--tg-theme-button-text-color, #ffffff);
-      --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
-    }
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-    }
-    .container {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 24px 20px;
-    }
-    h1 { font-size: 24px; margin: 0 0 8px; }
-    p.hint { color: var(--hint); margin: 0 0 24px; }
-    .card {
-      background: var(--secondary-bg);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-      font-size: 14px;
-    }
-    .row:last-child { border-bottom: none; }
-    .row .key { color: var(--hint); }
-    .row .val { font-weight: 500; word-break: break-all; text-align: right; max-width: 60%; }
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      border: none;
-      border-radius: 12px;
-      font-weight: 600;
-    }
-    button:active { opacity: 0.8; }
-  </style>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <div class="container">
-    <h1 id="greeting">你好 👋</h1>
-    <p class="hint" id="subtitle">这是一个 Telegram Mini App Demo</p>
-
-    <div class="card" id="userCard">
-      <div class="row"><span class="key">用户 ID</span><span class="val" id="userId">-</span></div>
-      <div class="row"><span class="key">用户名</span><span class="val" id="userName">-</span></div>
-      <div class="row"><span class="key">语言</span><span class="val" id="userLang">-</span></div>
-      <div class="row"><span class="key">平台</span><span class="val" id="platform">-</span></div>
-      <div class="row"><span class="key">版本</span><span class="val" id="version">-</span></div>
-    </div>
-
-    <button onclick="onTap()">点我打个招呼 🐑</button>
-  </div>
-
-  <script>
-    const tg = window.Telegram?.WebApp;
-
-    if (tg) {
-      tg.ready();
-      tg.expand();
-
-      const user = tg.initDataUnsafe?.user;
-      if (user) {
-        document.getElementById('greeting').textContent =
-          `你好 ${user.first_name || ''} 👋`;
-        document.getElementById('userId').textContent = user.id;
-        document.getElementById('userName').textContent =
-          user.username ? '@' + user.username : (user.first_name || '匿名');
-        document.getElementById('userLang').textContent = user.language_code || '-';
-      } else {
-        document.getElementById('subtitle').textContent =
-          '⚠️ 不在 Telegram 内打开，看不到用户信息';
-      }
-
-      document.getElementById('platform').textContent = tg.platform || '-';
-      document.getElementById('version').textContent = tg.version || '-';
-    } else {
-      document.getElementById('subtitle').textContent =
-        '⚠️ 未检测到 Telegram 环境，请在 Telegram 内打开';
-    }
-
-    function onTap() {
-      if (!tg) {
-        alert('请在 Telegram 内打开');
-        return;
-      }
-      tg.HapticFeedback?.impactOccurred('medium');
-      tg.showPopup({
-        title: '🐑 你好',
-        message: 'Telegram Mini App 跑通啦！',
-        buttons: [{ type: 'ok' }]
-      });
-    }
-  </script>
+  <div id="app"></div>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>
