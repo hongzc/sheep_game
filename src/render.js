@@ -44,6 +44,10 @@ export function renderGame(state, handlers) {
   const timer = el('div', 'timer', '00:00');
   timer.id = 'timer';
   hud.append(timer);
+  const mute = el('button', 'icon-btn mute-btn', handlers.isMuted?.() ? '🔇' : '🔊');
+  mute.id = 'mute-btn';
+  mute.addEventListener('click', handlers.onToggleMute);
+  hud.append(mute);
   wrap.append(hud);
 
   // Board

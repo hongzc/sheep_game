@@ -17,6 +17,10 @@ import {
   renderGame,
   showResultModal,
 } from './render.js';
+import {
+  sfxPick, sfxMatch, sfxWin, sfxLose, sfxItem,
+  isMuted, toggleMute, unlockAudio,
+} from './audio.js';
 
 const tg = window.Telegram?.WebApp;
 let save = loadSave();
@@ -28,6 +32,10 @@ if (tg) {
   tg.ready();
   tg.expand();
 }
+
+// 解锁 AudioContext（浏览器要求首次手势触发）
+window.addEventListener('pointerdown', unlockAudio, { once: true });
+window.addEventListener('touchstart', unlockAudio, { once: true });
 
 function haptic(kind) {
   if (!tg?.HapticFeedback) return;
@@ -81,11 +89,12 @@ function drawGame() {
     onPick: (stackIdx, tileEl) => onPick(stackIdx, tileEl),
     onUndo: () => {
       if (busy) return;
-      if (useUndo(state)) drawGame();
+      if (useUndo(state)) { sfxItem(); drawGame(); }
     },
     onShuffle: () => {
       if (busy) return;
       if (useShuffle(state)) {
+        sfxItem();
         haptic('match');
         drawGame();
         finishTurn();
@@ -94,11 +103,18 @@ function drawGame() {
     onRemove3: () => {
       if (busy) return;
       if (useRemove3(state)) {
+        sfxItem();
         haptic('match');
         drawGame();
         finishTurn();
       }
     },
+    onToggleMute: () => {
+      const m = toggleMute();
+      const btn = document.getElementById('mute-btn');
+      if (btn) btn.textContent = m ? '🔇' : '🔊';
+    },
+    isMuted,
   });
 }
 
@@ -108,6 +124,7 @@ async function onPick(stackIdx, tileEl) {
   const fromRect = tileEl?.getBoundingClientRect();
   const tile = pickTile(state, stackIdx);
   if (!tile) return;
+  sfxPick();
   haptic('pick');
   busy = true;
   drawGame();
@@ -117,6 +134,7 @@ async function onPick(stackIdx, tileEl) {
   }
   const matched = applyResolution(state);
   if (matched) {
+    sfxMatch();
     haptic('match');
     fireConfettiAt(document.getElementById('tray'));
     drawGame();
@@ -179,6 +197,7 @@ function fireConfettiAt(el) {
 function finishTurn() {
   if (state.status === 'won') {
     stopTimer();
+    sfxWin();
     haptic('win');
     if (window.confetti) {
       window.confetti({ particleCount: 160, spread: 100, origin: { y: 0.6 } });
@@ -198,6 +217,7 @@ function finishTurn() {
     );
   } else if (state.status === 'lost') {
     stopTimer();
+    sfxLose();
     haptic('lose');
     showResultModal(
       { won: false, elapsedMs: state.elapsedMs, hasNext: false },
