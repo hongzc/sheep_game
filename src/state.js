@@ -8,6 +8,10 @@ export function loadSave() {
     if (!raw) return defaultSave();
     const parsed = JSON.parse(raw);
     if (!parsed.completedLevels) return defaultSave();
+    // 关卡数量扩展时补齐数组
+    while (parsed.completedLevels.length < LEVELS.length) {
+      parsed.completedLevels.push(false);
+    }
     return parsed;
   } catch {
     return defaultSave();
