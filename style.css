@@ -123,6 +123,14 @@ body::before {
   cursor: not-allowed;
 }
 
+.lock-hint {
+  margin: 20px 0 0;
+  text-align: center;
+  color: var(--hint);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
 .level-name {
   font-size: 18px;
   font-weight: 600;

@@ -12,9 +12,9 @@ export function renderLevelSelect(save, onPick) {
 
   const list = el('div', 'level-list');
   LEVELS.forEach((lv, i) => {
-    const unlocked = i <= save.highestUnlocked;
+    if (i > save.highestUnlocked) return; // 隐藏未解锁
     const completed = save.completedLevels[i];
-    const card = el('button', 'level-card' + (unlocked ? '' : ' locked'));
+    const card = el('button', 'level-card');
     card.append(el('div', 'level-name', lv.name));
     const meta = el('div', 'level-meta');
     meta.append(el('span', 'meta-item', `${lv.heights.length} 列`));
@@ -22,11 +22,16 @@ export function renderLevelSelect(save, onPick) {
     meta.append(el('span', 'meta-item', `${lv.typesCount} 种`));
     card.append(meta);
     if (completed) card.append(el('div', 'level-badge', '✓ 已通关'));
-    else if (!unlocked) card.append(el('div', 'level-badge', '🔒 未解锁'));
-    if (unlocked) card.addEventListener('click', () => onPick(i));
+    card.addEventListener('click', () => onPick(i));
     list.append(card);
   });
   wrap.append(list);
+  const remaining = LEVELS.length - 1 - save.highestUnlocked;
+  if (remaining > 0) {
+    wrap.append(el('p', 'lock-hint', `通关后解锁下一关 · 剩余 ${remaining} 关待解锁`));
+  } else {
+    wrap.append(el('p', 'lock-hint', '🏆 全关卡已解锁'));
+  }
   root.append(wrap);
 }
 
