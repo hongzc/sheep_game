@@ -182,11 +182,15 @@ function flyTile(type, fromRect, toEl) {
     const prevChildren = Array.from(toEl.childNodes);
     prevChildren.forEach((n) => n.remove());
     toEl.classList.remove('filled');
+    // Force reflow so the initial styles (left/top/width/height/transform:none)
+    // are committed before we change transform. Without this, the browser may
+    // collapse the two states and skip the transition entirely.
+    void ghost.offsetWidth;
+    const dx = toRect.left - fromRect.left;
+    const dy = toRect.top - fromRect.top;
+    const sx = toRect.width / fromRect.width;
+    const sy = toRect.height / fromRect.height;
     requestAnimationFrame(() => {
-      const dx = toRect.left - fromRect.left;
-      const dy = toRect.top - fromRect.top;
-      const sx = toRect.width / fromRect.width;
-      const sy = toRect.height / fromRect.height;
       ghost.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
     });
     let done = false;
@@ -200,7 +204,7 @@ function flyTile(type, fromRect, toEl) {
       resolve();
     };
     ghost.addEventListener('transitionend', cleanup, { once: true });
-    setTimeout(cleanup, 360);
+    setTimeout(cleanup, 500);
   });
 }
 
