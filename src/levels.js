@@ -5,6 +5,7 @@ export const ANIMAL_POOL = [
 ];
 
 // 8 关阶梯式难度：牌数↑ + 类型数↑ + 道具配额↓
+// theme 对应 style.css 中 body[data-theme="..."] 的背景光斑配色
 export const LEVELS = [
   {
     id: 1,
@@ -13,6 +14,7 @@ export const LEVELS = [
     heights: [6, 6, 6, 6, 6, 6, 6], // 7 列 = 42
     typesCount: 8,
     items: { undo: 2, shuffle: 1, remove3: 1 },
+    theme: 'sakura',
   },
   {
     id: 2,
@@ -21,6 +23,7 @@ export const LEVELS = [
     heights: [7, 7, 7, 7, 7, 7, 7], // 7 列 = 49
     typesCount: 9,
     items: { undo: 2, shuffle: 1, remove3: 0 },
+    theme: 'ocean',
   },
   {
     id: 3,
@@ -29,6 +32,7 @@ export const LEVELS = [
     heights: [8, 8, 8, 8, 8, 8, 8, 8], // 8 列 = 64
     typesCount: 10,
     items: { undo: 1, shuffle: 1, remove3: 1 },
+    theme: 'honey',
   },
   {
     id: 4,
@@ -37,6 +41,7 @@ export const LEVELS = [
     heights: [9, 9, 9, 9, 9, 9, 9, 9], // 8 列 = 72
     typesCount: 10,
     items: { undo: 1, shuffle: 1, remove3: 0 },
+    theme: 'lavender',
   },
   {
     id: 5,
@@ -45,6 +50,7 @@ export const LEVELS = [
     heights: [10, 10, 10, 10, 10, 10, 10, 10], // 8 列 = 80
     typesCount: 11,
     items: { undo: 1, shuffle: 1, remove3: 0 },
+    theme: 'meadow',
   },
   {
     id: 6,
@@ -53,6 +59,7 @@ export const LEVELS = [
     heights: [11, 11, 11, 11, 11, 11, 11, 11, 11], // 9 列 = 99
     typesCount: 11,
     items: { undo: 1, shuffle: 0, remove3: 1 },
+    theme: 'coral',
   },
   {
     id: 7,
@@ -61,6 +68,7 @@ export const LEVELS = [
     heights: [12, 12, 12, 12, 12, 12, 12, 12, 12], // 9 列 = 108
     typesCount: 12,
     items: { undo: 0, shuffle: 1, remove3: 0 },
+    theme: 'aurora',
   },
   {
     id: 8,
@@ -69,5 +77,6 @@ export const LEVELS = [
     heights: [13, 13, 13, 13, 13, 13, 13, 13, 13], // 9 列 = 117
     typesCount: 12,
     items: { undo: 0, shuffle: 0, remove3: 0 },
+    theme: 'gold',
   },
 ];

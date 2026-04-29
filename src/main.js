@@ -77,10 +77,16 @@ function startTimer() {
   }, 250);
 }
 
+function applyTheme(theme) {
+  if (theme) document.body.dataset.theme = theme;
+  else delete document.body.dataset.theme;
+}
+
 function goHome() {
   stopTimer();
   state = null;
   busy = false;
+  applyTheme(null);
   renderLevelSelect(save, startLevel);
 }
 
@@ -91,6 +97,7 @@ function startLevel(levelIdx) {
   state.stacks = generateBoard(level);
   state.itemsUsed = { undo: 0, shuffle: 0, remove3: 0 };
   busy = false;
+  applyTheme(level.theme);
   track('level_start', { level_id: level.id, level_name: level.name });
   drawGame();
   startTimer();
