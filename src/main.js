@@ -22,6 +22,7 @@ import {
   isMuted, toggleMute, unlockAudio,
 } from './audio.js';
 import { identify, track } from './analytics.js';
+import { makeTileContent } from './assets-map.js';
 
 const tg = window.Telegram?.WebApp;
 let save = loadSave();
@@ -170,14 +171,14 @@ function flyTile(type, fromRect, toEl) {
     const toRect = toEl.getBoundingClientRect();
     const ghost = document.createElement('div');
     ghost.className = 'tile flying';
-    ghost.textContent = type;
+    ghost.append(makeTileContent(type));
     ghost.style.left = `${fromRect.left}px`;
     ghost.style.top = `${fromRect.top}px`;
     ghost.style.width = `${fromRect.width}px`;
     ghost.style.height = `${fromRect.height}px`;
     document.body.append(ghost);
-    const prevText = toEl.textContent;
-    toEl.textContent = '';
+    const prevChildren = Array.from(toEl.childNodes);
+    prevChildren.forEach((n) => n.remove());
     toEl.classList.remove('filled');
     requestAnimationFrame(() => {
       const dx = toRect.left - fromRect.left;
@@ -191,7 +192,7 @@ function flyTile(type, fromRect, toEl) {
       if (done) return;
       done = true;
       ghost.remove();
-      toEl.textContent = prevText;
+      prevChildren.forEach((n) => toEl.append(n));
       toEl.classList.add('filled', 'just-filled');
       setTimeout(() => toEl.classList.remove('just-filled'), 280);
       resolve();

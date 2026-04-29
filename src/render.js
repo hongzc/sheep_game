@@ -1,6 +1,7 @@
 import { TRAY_LIMIT } from './game.js';
 import { LEVELS } from './levels.js';
 import { t, levelTitle, getLocale, setLocale } from './i18n.js';
+import { makeTileContent } from './assets-map.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -86,15 +87,15 @@ export function renderGame(state, handlers) {
   state.stacks.forEach((stack, stackIdx) => {
     const col = el('div', 'col');
     stack.forEach((tile, depth) => {
-      const t = el('div', 'tile' + (depth === stack.length - 1 ? ' top' : ''));
-      t.style.transform = `translateY(${depth * -6}px)`;
-      t.style.zIndex = String(depth);
-      t.textContent = tile.type;
-      t.dataset.tileId = String(tile.id);
+      const tEl = el('div', 'tile' + (depth === stack.length - 1 ? ' top' : ''));
+      tEl.style.transform = `translateY(${depth * -6}px)`;
+      tEl.style.zIndex = String(depth);
+      tEl.dataset.tileId = String(tile.id);
+      tEl.append(makeTileContent(tile.type));
       if (depth === stack.length - 1) {
-        t.addEventListener('click', () => handlers.onPick(stackIdx, t));
+        tEl.addEventListener('click', () => handlers.onPick(stackIdx, tEl));
       }
-      col.append(t);
+      col.append(tEl);
     });
     if (stack.length === 0) col.classList.add('empty');
     board.append(col);
@@ -110,7 +111,7 @@ export function renderGame(state, handlers) {
     const tile = state.tray[i];
     if (tile) {
       slot.classList.add('filled');
-      slot.textContent = tile.type;
+      slot.append(makeTileContent(tile.type));
       slot.dataset.tileId = String(tile.id);
     }
     tray.append(slot);

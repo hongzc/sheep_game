@@ -346,6 +346,39 @@ body::before {
   transition: transform 0.15s;
 }
 
+.tile-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.tile-img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+  filter: drop-shadow(0 2px 3px rgba(80, 30, 120, 0.18));
+}
+
+.tile.top .tile-inner {
+  animation: tile-bob 1.8s ease-in-out infinite;
+}
+
+@keyframes tile-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-2px) scale(1.04); }
+}
+
+.tile.top:active .tile-inner {
+  animation: none;
+  transform: scale(0.88);
+  transition: transform 0.08s ease-out;
+}
+
 /* 顶层 tile 呼吸光晕 */
 .tile.top {
   cursor: pointer;
@@ -426,6 +459,11 @@ body::before {
 
 .slot.just-filled {
   animation: pop 0.32s cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+.slot .tile-inner {
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes pop {
