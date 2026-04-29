@@ -28,7 +28,6 @@ const tg = window.Telegram?.WebApp;
 let save = loadSave();
 let state = null;
 let timerInterval = null;
-let busy = false;
 
 if (tg) {
   tg.ready();
@@ -85,7 +84,6 @@ function applyTheme(theme) {
 function goHome() {
   stopTimer();
   state = null;
-  busy = false;
   applyTheme(null);
   renderLevelSelect(save, startLevel);
 }
@@ -96,7 +94,6 @@ function startLevel(levelIdx) {
   state.levelIdx = levelIdx;
   state.stacks = generateBoard(level);
   state.itemsUsed = { undo: 0, shuffle: 0, remove3: 0 };
-  busy = false;
   applyTheme(level.theme);
   track('level_start', { level_id: level.id, level_name: level.name });
   drawGame();
@@ -108,7 +105,6 @@ function drawGame() {
     onBack: goHome,
     onPick: (stackIdx, tileEl) => onPick(stackIdx, tileEl),
     onUndo: () => {
-      if (busy) return;
       if (useUndo(state)) {
         state.itemsUsed.undo++;
         track('item_used', { item: 'undo', level_id: state.level.id });
@@ -117,7 +113,6 @@ function drawGame() {
       }
     },
     onShuffle: () => {
-      if (busy) return;
       if (useShuffle(state)) {
         state.itemsUsed.shuffle++;
         track('item_used', { item: 'shuffle', level_id: state.level.id });
@@ -128,7 +123,6 @@ function drawGame() {
       }
     },
     onRemove3: () => {
-      if (busy) return;
       if (useRemove3(state)) {
         state.itemsUsed.remove3++;
         track('item_used', { item: 'remove3', level_id: state.level.id });
@@ -148,29 +142,30 @@ function drawGame() {
   });
 }
 
-async function onPick(stackIdx, tileEl) {
-  if (busy) return;
+function onPick(stackIdx, tileEl) {
   if (state.status !== 'playing') return;
   const fromRect = tileEl?.getBoundingClientRect();
   const tile = pickTile(state, stackIdx);
   if (!tile) return;
   sfxPick();
   haptic('pick');
-  busy = true;
   drawGame();
   const slot = document.querySelector(`#tray .slot[data-tile-id="${tile.id}"]`);
+  const arrive = () => {
+    const matched = applyResolution(state);
+    if (matched) {
+      sfxMatch();
+      haptic('match');
+      fireConfettiAt(document.getElementById('tray'));
+      drawGame();
+    }
+    finishTurn();
+  };
   if (fromRect && slot) {
-    await flyTile(tile.type, fromRect, slot);
+    flyTile(tile.type, fromRect, slot).then(arrive);
+  } else {
+    arrive();
   }
-  const matched = applyResolution(state);
-  if (matched) {
-    sfxMatch();
-    haptic('match');
-    fireConfettiAt(document.getElementById('tray'));
-    drawGame();
-  }
-  busy = false;
-  finishTurn();
 }
 
 function flyTile(type, fromRect, toEl) {
