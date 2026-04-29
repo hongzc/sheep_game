@@ -1,6 +1,6 @@
 import { TRAY_LIMIT } from './game.js';
 import { LEVELS } from './levels.js';
-import { t, levelTitle } from './i18n.js';
+import { t, levelTitle, getLocale, setLocale } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -8,6 +8,15 @@ export function renderLevelSelect(save, onPick) {
   const root = $('app');
   root.innerHTML = '';
   const wrap = el('div', 'screen level-select');
+
+  const langBtn = el('button', 'lang-btn', getLocale() === 'en' ? '中' : 'EN');
+  langBtn.setAttribute('aria-label', 'Switch language');
+  langBtn.addEventListener('click', () => {
+    setLocale(getLocale() === 'en' ? 'zh' : 'en');
+    renderLevelSelect(save, onPick);
+  });
+  wrap.append(langBtn);
+
   wrap.append(el('h1', 'title', t('title')));
   wrap.append(el('p', 'subtitle', t('select_level')));
 

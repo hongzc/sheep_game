@@ -22,9 +22,6 @@ import {
   isMuted, toggleMute, unlockAudio,
 } from './audio.js';
 import { identify, track } from './analytics.js';
-import { locale } from './i18n.js';
-
-document.documentElement.lang = locale;
 
 const tg = window.Telegram?.WebApp;
 let save = loadSave();

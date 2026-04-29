@@ -39,21 +39,39 @@ const dict = {
   },
 };
 
-function detectLocale() {
+const LOCALE_KEY = 'triple_pop_locale_v1';
+const SUPPORTED = ['en', 'zh'];
+
+function loadLocale() {
   try {
-    const tgLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
-    const lang = (tgLang || navigator.language || 'en').toLowerCase();
-    if (lang.startsWith('zh')) return 'zh';
-    return 'en';
+    const saved = localStorage.getItem(LOCALE_KEY);
+    if (saved && SUPPORTED.includes(saved)) return saved;
   } catch {
-    return 'en';
+    // ignore
   }
+  return 'en';
 }
 
-export const locale = detectLocale();
+let currentLocale = loadLocale();
+try { document.documentElement.lang = currentLocale; } catch {}
+
+export function getLocale() {
+  return currentLocale;
+}
+
+export function setLocale(loc) {
+  if (!SUPPORTED.includes(loc)) return;
+  currentLocale = loc;
+  try { localStorage.setItem(LOCALE_KEY, loc); } catch {}
+  try { document.documentElement.lang = loc; } catch {}
+}
+
+export function nextLocale() {
+  return currentLocale === 'en' ? 'zh' : 'en';
+}
 
 export function t(key, ...args) {
-  const tbl = dict[locale] || dict.en;
+  const tbl = dict[currentLocale] || dict.en;
   let v = tbl[key];
   if (v === undefined) v = dict.en[key];
   if (typeof v === 'string') {
