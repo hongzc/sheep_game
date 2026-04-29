@@ -84,11 +84,13 @@ export function renderGame(state, handlers) {
   const maxStack = Math.max(...state.level.heights);
   board.style.setProperty('--cols', String(cols));
   board.style.setProperty('--max-stack', String(maxStack));
+  // 自适应堆叠偏移：总上探量稳定在 ~50px（不撞 HUD）
+  const offsetPx = Math.min(10, Math.floor(50 / Math.max(1, maxStack - 1)));
   state.stacks.forEach((stack, stackIdx) => {
     const col = el('div', 'col');
     stack.forEach((tile, depth) => {
       const tEl = el('div', 'tile' + (depth === stack.length - 1 ? ' top' : ''));
-      tEl.style.transform = `translateY(${depth * -10}px)`;
+      tEl.style.transform = `translateY(${depth * -offsetPx}px)`;
       tEl.style.zIndex = String(depth);
       tEl.dataset.tileId = String(tile.id);
       tEl.append(makeTileContent(tile.type));
