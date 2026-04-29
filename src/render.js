@@ -1,5 +1,6 @@
 import { TRAY_LIMIT } from './game.js';
 import { LEVELS } from './levels.js';
+import { t, levelTitle } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -7,8 +8,8 @@ export function renderLevelSelect(save, onPick) {
   const root = $('app');
   root.innerHTML = '';
   const wrap = el('div', 'screen level-select');
-  wrap.append(el('h1', 'title', 'Triple Pop'));
-  wrap.append(el('p', 'subtitle', '选择关卡'));
+  wrap.append(el('h1', 'title', t('title')));
+  wrap.append(el('p', 'subtitle', t('select_level')));
 
   const list = el('div', 'level-list');
   LEVELS.forEach((lv, i) => {
@@ -23,7 +24,7 @@ export function renderLevelSelect(save, onPick) {
     card.append(num);
 
     const main = el('div', 'level-main');
-    main.append(el('div', 'level-name', `第 ${lv.id} 关 · ${lv.name}`));
+    main.append(el('div', 'level-name', levelTitle(lv.id)));
     const stars = el('div', 'level-stars');
     for (let s = 1; s <= 5; s++) {
       stars.append(el('span', 'star' + (s <= lv.difficulty ? ' on' : ''), '★'));
@@ -39,9 +40,9 @@ export function renderLevelSelect(save, onPick) {
   wrap.append(list);
   const remaining = LEVELS.length - 1 - save.highestUnlocked;
   if (remaining > 0) {
-    wrap.append(el('p', 'lock-hint', `通关后解锁下一关 · 剩余 ${remaining} 关待挑战`));
+    wrap.append(el('p', 'lock-hint', t('lock_hint', remaining)));
   } else {
-    wrap.append(el('p', 'lock-hint', '🏆 全关卡已通关'));
+    wrap.append(el('p', 'lock-hint', t('all_cleared')));
   }
   root.append(wrap);
 }
@@ -56,7 +57,7 @@ export function renderGame(state, handlers) {
   const back = el('button', 'icon-btn', '←');
   back.addEventListener('click', handlers.onBack);
   hud.append(back);
-  hud.append(el('div', 'level-title', state.level.name));
+  hud.append(el('div', 'level-title', levelTitle(state.level.id)));
   const timer = el('div', 'timer', '00:00');
   timer.id = 'timer';
   hud.append(timer);
@@ -109,9 +110,9 @@ export function renderGame(state, handlers) {
 
   // Items
   const items = el('div', 'items');
-  items.append(itemBtn('↶', '撤销', state.items.undo, handlers.onUndo));
-  items.append(itemBtn('🔀', '洗牌', state.items.shuffle, handlers.onShuffle));
-  items.append(itemBtn('✂️', '移出 3', state.items.remove3, handlers.onRemove3));
+  items.append(itemBtn('↶', t('item_undo'), state.items.undo, handlers.onUndo));
+  items.append(itemBtn('🔀', t('item_shuffle'), state.items.shuffle, handlers.onShuffle));
+  items.append(itemBtn('✂️', t('item_remove3'), state.items.remove3, handlers.onRemove3));
   wrap.append(items);
 
   root.append(wrap);
@@ -131,25 +132,24 @@ export function showResultModal({ won, elapsedMs, hasNext }, handlers) {
   const overlay = el('div', 'modal-overlay');
   const modal = el('div', 'modal');
   modal.append(el('div', 'modal-emoji', won ? '🎉' : '😿'));
-  modal.append(el('div', 'modal-title', won ? '通关！' : '失败了'));
+  modal.append(el('div', 'modal-title', won ? t('won_title') : t('lost_title')));
   if (won) {
     const sec = (elapsedMs / 1000).toFixed(1);
-    modal.append(el('div', 'modal-sub', `用时 ${sec}s`));
+    modal.append(el('div', 'modal-sub', t('time_used', sec)));
   } else {
-    modal.append(el('div', 'modal-sub', '槽位满了，再来一次？'));
+    modal.append(el('div', 'modal-sub', t('lost_sub')));
   }
   const actions = el('div', 'modal-actions');
   if (won && hasNext) {
-    const next = el('button', 'btn primary', '下一关');
+    const next = el('button', 'btn primary', t('btn_next'));
     next.addEventListener('click', handlers.onNext);
     actions.append(next);
   }
-  const retry = el('button', 'btn' + (won ? '' : ' primary'), won ? '再玩一次' : '重试');
+  const retry = el('button', 'btn' + (won ? '' : ' primary'), won ? t('btn_play_again') : t('btn_retry'));
   retry.addEventListener('click', handlers.onRetry);
   actions.append(retry);
-  // 通关后不显示关卡选择按钮（已通过 modal 完成关卡）
   if (!won) {
-    const home = el('button', 'btn', '关卡选择');
+    const home = el('button', 'btn', t('btn_home'));
     home.addEventListener('click', handlers.onHome);
     actions.append(home);
   }
