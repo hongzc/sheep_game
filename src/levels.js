@@ -10,7 +10,7 @@ export const LEVELS = [
     id: 1,
     name: '新手',
     difficulty: 1,
-    heights: [5, 5, 5, 5, 5, 5, 6], // 7 列 = 36
+    heights: [6, 6, 6, 6, 6, 6, 6], // 7 列 = 42
     typesCount: 8,
     items: { undo: 2, shuffle: 1, remove3: 1 },
   },
