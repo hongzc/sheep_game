@@ -88,7 +88,7 @@ export function renderGame(state, handlers) {
     const col = el('div', 'col');
     stack.forEach((tile, depth) => {
       const tEl = el('div', 'tile' + (depth === stack.length - 1 ? ' top' : ''));
-      tEl.style.transform = `translateY(${depth * -6}px)`;
+      tEl.style.transform = `translateY(${depth * -10}px)`;
       tEl.style.zIndex = String(depth);
       tEl.dataset.tileId = String(tile.id);
       tEl.append(makeTileContent(tile.type));
