@@ -160,6 +160,11 @@ export function showResultModal({ won, elapsedMs, hasNext }, handlers) {
   const retry = el('button', 'btn' + (won ? '' : ' primary'), won ? t('btn_play_again') : t('btn_retry'));
   retry.addEventListener('click', handlers.onRetry);
   actions.append(retry);
+  if (won && handlers.onFollow) {
+    const follow = el('button', 'btn follow', t('btn_follow'));
+    follow.addEventListener('click', handlers.onFollow);
+    actions.append(follow);
+  }
   if (!won) {
     const home = el('button', 'btn', t('btn_home'));
     home.addEventListener('click', handlers.onHome);

@@ -17,6 +17,7 @@ const dict = {
     btn_play_again: '再玩一次',
     btn_retry: '重试',
     btn_home: '关卡选择',
+    btn_follow: '🐾 关注 TinyPaws',
   },
   en: {
     title: 'Triple Pop',
@@ -36,6 +37,7 @@ const dict = {
     btn_play_again: 'Play Again',
     btn_retry: 'Retry',
     btn_home: 'Levels',
+    btn_follow: '🐾 Follow TinyPaws',
   },
 };
 

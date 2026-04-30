@@ -249,6 +249,15 @@ function finishTurn() {
         onNext: () => startLevel(state.levelIdx + 1),
         onRetry: () => startLevel(state.levelIdx),
         onHome: goHome,
+        onFollow: () => {
+          track('follow_clicked', {
+            source: 'win_modal',
+            level_id: state.level.id,
+          });
+          const url = 'https://t.me/tinypaws_games';
+          if (tg?.openTelegramLink) tg.openTelegramLink(url);
+          else window.open(url, '_blank');
+        },
       },
     );
   } else if (state.status === 'lost') {

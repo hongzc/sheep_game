@@ -639,6 +639,12 @@ body::before {
   box-shadow: 0 6px 18px rgba(236, 72, 153, 0.4);
 }
 
+.btn.follow {
+  background: linear-gradient(135deg, #FFB766, #FF8C42);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(255, 140, 66, 0.35);
+}
+
 /* 移动端适配：屏幕窄时缩 tile */
 @media (max-width: 380px) {
   :root {
