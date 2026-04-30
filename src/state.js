@@ -57,5 +57,6 @@ export function createGameState(level) {
     history: [],
     startTime: Date.now(),
     elapsedMs: 0,
+    flyingIds: new Set(),
   };
 }

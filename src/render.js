@@ -107,14 +107,19 @@ export function renderGame(state, handlers) {
   // Tray
   const tray = el('div', 'tray');
   tray.id = 'tray';
+  const flyingIds = state.flyingIds || new Set();
   for (let i = 0; i < TRAY_LIMIT; i++) {
     const slot = el('div', 'slot');
     slot.dataset.slotIdx = String(i);
     const tile = state.tray[i];
     if (tile) {
-      slot.classList.add('filled');
-      slot.append(makeTileContent(tile.type));
       slot.dataset.tileId = String(tile.id);
+      if (flyingIds.has(tile.id)) {
+        slot.classList.add('reserved');
+      } else {
+        slot.classList.add('filled');
+        slot.append(makeTileContent(tile.type));
+      }
     }
     tray.append(slot);
   }

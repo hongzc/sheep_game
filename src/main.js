@@ -81,14 +81,20 @@ function applyTheme(theme) {
   else delete document.body.dataset.theme;
 }
 
+function clearFlyingGhosts() {
+  document.querySelectorAll('.tile.flying').forEach((g) => g.remove());
+}
+
 function goHome() {
   stopTimer();
+  clearFlyingGhosts();
   state = null;
   applyTheme(null);
   renderLevelSelect(save, startLevel);
 }
 
 function startLevel(levelIdx) {
+  clearFlyingGhosts();
   const level = LEVELS[levelIdx];
   state = createGameState(level);
   state.levelIdx = levelIdx;
@@ -142,16 +148,48 @@ function drawGame() {
   });
 }
 
+function snapshotTileSource(el) {
+  // 用 offsetWidth/Height 拿到不受 :active scale 影响的真实尺寸；
+  // 中心点用 getBoundingClientRect（transform-origin 是 center，中心仍准确）
+  const r = el.getBoundingClientRect();
+  const w = el.offsetWidth || r.width;
+  const h = el.offsetHeight || r.height;
+  return {
+    cx: r.left + r.width / 2,
+    cy: r.top + r.height / 2,
+    w,
+    h,
+  };
+}
+
 function onPick(stackIdx, tileEl) {
-  if (state.status !== 'playing') return;
-  const fromRect = tileEl?.getBoundingClientRect();
+  if (!state || state.status !== 'playing') return;
+  if (!tileEl) return;
+  const src = snapshotTileSource(tileEl);
+
   const tile = pickTile(state, stackIdx);
   if (!tile) return;
+  state.flyingIds.add(tile.id);
+
   sfxPick();
   haptic('pick');
   drawGame();
-  const slot = document.querySelector(`#tray .slot[data-tile-id="${tile.id}"]`);
-  const arrive = () => {
+
+  const tileId = tile.id;
+  const slot = document.querySelector(`#tray .slot[data-tile-id="${tileId}"]`);
+
+  const onArrived = () => {
+    if (!state) return;
+    state.flyingIds.delete(tileId);
+    drawGame();
+    // 落地动画：找到刚渲染好的 slot 加 just-filled
+    const landed = document.querySelector(
+      `#tray .slot[data-tile-id="${tileId}"]`,
+    );
+    if (landed) {
+      landed.classList.add('just-filled');
+      setTimeout(() => landed.classList.remove('just-filled'), 280);
+    }
     const matched = applyResolution(state);
     if (matched) {
       sfxMatch();
@@ -161,50 +199,57 @@ function onPick(stackIdx, tileEl) {
     }
     finishTurn();
   };
-  if (fromRect && slot) {
-    flyTile(tile.type, fromRect, slot).then(arrive);
+
+  if (slot && src.w > 0 && src.h > 0) {
+    const toRect = slot.getBoundingClientRect();
+    flyTile(tile.type, src, toRect).then(onArrived);
   } else {
-    arrive();
+    onArrived();
   }
 }
 
-function flyTile(type, fromRect, toEl) {
+function flyTile(type, src, toRect) {
   return new Promise((resolve) => {
-    const toRect = toEl.getBoundingClientRect();
     const ghost = document.createElement('div');
     ghost.className = 'tile flying';
     ghost.append(makeTileContent(type));
-    ghost.style.left = `${fromRect.left}px`;
-    ghost.style.top = `${fromRect.top}px`;
-    ghost.style.width = `${fromRect.width}px`;
-    ghost.style.height = `${fromRect.height}px`;
+    const left = src.cx - src.w / 2;
+    const top = src.cy - src.h / 2;
+    ghost.style.left = `${left}px`;
+    ghost.style.top = `${top}px`;
+    ghost.style.width = `${src.w}px`;
+    ghost.style.height = `${src.h}px`;
+    ghost.style.transform = 'translate(0px, 0px) scale(1, 1)';
     document.body.append(ghost);
-    const prevChildren = Array.from(toEl.childNodes);
-    prevChildren.forEach((n) => n.remove());
-    toEl.classList.remove('filled');
-    // Force reflow so the initial styles (left/top/width/height/transform:none)
-    // are committed before we change transform. Without this, the browser may
-    // collapse the two states and skip the transition entirely.
+    // 强制 reflow 让初始 transform 落到样式里，再在下一帧改写终态
     void ghost.offsetWidth;
-    const dx = toRect.left - fromRect.left;
-    const dy = toRect.top - fromRect.top;
-    const sx = toRect.width / fromRect.width;
-    const sy = toRect.height / fromRect.height;
+
+    const targetCx = toRect.left + toRect.width / 2;
+    const targetCy = toRect.top + toRect.height / 2;
+    const dx = targetCx - src.cx;
+    const dy = targetCy - src.cy;
+    const sx = toRect.width / src.w;
+    const sy = toRect.height / src.h;
+
+    // 双 rAF：跨过 commit 边界，确保 transition 一定触发
     requestAnimationFrame(() => {
-      ghost.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+      requestAnimationFrame(() => {
+        ghost.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+      });
     });
+
     let done = false;
     const cleanup = () => {
       if (done) return;
       done = true;
       ghost.remove();
-      prevChildren.forEach((n) => toEl.append(n));
-      toEl.classList.add('filled', 'just-filled');
-      setTimeout(() => toEl.classList.remove('just-filled'), 280);
       resolve();
     };
-    ghost.addEventListener('transitionend', cleanup, { once: true });
-    setTimeout(cleanup, 500);
+    ghost.addEventListener('transitionend', (e) => {
+      if (e.propertyName === 'transform') cleanup();
+    });
+    // 兜底（CSS 是 0.32s，留 80ms 余量）
+    setTimeout(cleanup, 400);
   });
 }
 
