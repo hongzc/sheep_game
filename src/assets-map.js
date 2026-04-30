@@ -1,7 +1,7 @@
 // 12 只动物：emoji ↔ 文件名映射
 // 出图后把 12 张 256×256 的 WebP 放到 assets/animals/，
 // 然后把 USE_IMAGES 改成 true 即可切换。
-export const USE_IMAGES = true;
+export const USE_IMAGES = false;
 
 export const ANIMAL_FILE = {
   '🐱': 'cat',
