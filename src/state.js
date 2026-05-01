@@ -1,14 +1,14 @@
 import { LEVELS } from './levels.js';
+import { load, save as saveKey } from './shared/storage.js';
 
 const SAVE_KEY = 'triple_pop_save_v1';
 
 export function loadSave() {
+  const raw = load(SAVE_KEY);
+  if (!raw) return defaultSave();
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return defaultSave();
     const parsed = JSON.parse(raw);
     if (!parsed.completedLevels) return defaultSave();
-    // 关卡数量扩展时补齐数组
     while (parsed.completedLevels.length < LEVELS.length) {
       parsed.completedLevels.push(false);
     }
@@ -19,16 +19,12 @@ export function loadSave() {
 }
 
 export function saveSave(save) {
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(save));
-  } catch {
-    // ignore quota / private mode
-  }
+  saveKey(SAVE_KEY, JSON.stringify(save));
 }
 
 function defaultSave() {
   return {
-    highestUnlocked: 0, // 索引，0 = 第 1 关
+    highestUnlocked: 0,
     completedLevels: LEVELS.map(() => false),
     lastPlayedAt: 0,
   };
@@ -52,7 +48,7 @@ export function createGameState(level) {
     level,
     stacks: [],
     tray: [],
-    status: 'playing', // 'playing' | 'won' | 'lost'
+    status: 'playing',
     items: { ...level.items },
     history: [],
     startTime: Date.now(),

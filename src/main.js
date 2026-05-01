@@ -16,45 +16,33 @@ import {
   renderLevelSelect,
   renderGame,
   redrawTray,
-  showResultModal,
 } from './render.js';
+import { showResultModal } from './shared/result-modal.js';
 import {
   sfxPick, sfxMatch, sfxWin, sfxLose, sfxItem,
   isMuted, toggleMute, unlockAudio,
-} from './audio.js';
-import { identify, track } from './analytics.js';
+} from './shared/audio.js';
+import { identify, track } from './shared/analytics.js';
+import { tgReady, tgUser, tgPlatformInfo, haptic, openTelegramLink } from './shared/telegram.js';
+import { fireConfettiAt, fireWinConfetti } from './shared/confetti.js';
+import { t } from './i18n.js';
 import { makeTileContent } from './assets-map.js';
 
-const tg = window.Telegram?.WebApp;
+tgReady();
+
 let save = loadSave();
 let state = null;
 let timerInterval = null;
 
-if (tg) {
-  tg.ready();
-  tg.expand();
-}
-
-// 埋点身份
-const tgUser = tg?.initDataUnsafe?.user;
-if (tgUser) identify(tgUser);
+const u = tgUser();
+if (u) identify(u);
 track('app_loaded', {
-  has_telegram_user: !!tgUser,
-  platform: tg?.platform || 'web',
-  color_scheme: tg?.colorScheme || 'unknown',
+  has_telegram_user: !!u,
+  ...tgPlatformInfo(),
 });
 
-// 解锁 AudioContext（浏览器要求首次手势触发）
 window.addEventListener('pointerdown', unlockAudio, { once: true });
 window.addEventListener('touchstart', unlockAudio, { once: true });
-
-function haptic(kind) {
-  if (!tg?.HapticFeedback) return;
-  if (kind === 'pick') tg.HapticFeedback.selectionChanged();
-  else if (kind === 'match') tg.HapticFeedback.impactOccurred('medium');
-  else if (kind === 'win') tg.HapticFeedback.notificationOccurred('success');
-  else if (kind === 'lose') tg.HapticFeedback.notificationOccurred('error');
-}
 
 function stopTimer() {
   if (timerInterval) {
@@ -150,8 +138,6 @@ function drawGame() {
 }
 
 function snapshotTileSource(el) {
-  // 用 offsetWidth/Height 拿到不受 :active scale 影响的真实尺寸；
-  // 中心点用 getBoundingClientRect（transform-origin 是 center，中心仍准确）
   const r = el.getBoundingClientRect();
   const w = el.offsetWidth || r.width;
   const h = el.offsetHeight || r.height;
@@ -203,7 +189,6 @@ function onPick(stackIdx, tileEl) {
     if (!state) return;
     state.flyingIds.delete(tileId);
 
-    // tray 槽位：reserved → filled
     const landed = document.querySelector(
       `#tray .slot[data-tile-id="${tileId}"]`,
     );
@@ -214,7 +199,6 @@ function onPick(stackIdx, tileEl) {
       setTimeout(() => landed.classList.remove('just-filled'), 280);
     }
 
-    // board 列：飞行结束，移除已隐藏的旧 top；新 top 已在 onPick 时升级好
     if (tileEl.parentElement) {
       const col = tileEl.parentElement;
       col.removeChild(tileEl);
@@ -252,7 +236,6 @@ function flyTile(type, src, toRect) {
     ghost.style.height = `${src.h}px`;
     ghost.style.transform = 'translate(0px, 0px) scale(1, 1)';
     document.body.append(ghost);
-    // 强制 reflow 让初始 transform 落到样式里，再在下一帧改写终态
     void ghost.offsetWidth;
 
     const targetCx = toRect.left + toRect.width / 2;
@@ -262,7 +245,6 @@ function flyTile(type, src, toRect) {
     const sx = toRect.width / src.w;
     const sy = toRect.height / src.h;
 
-    // 双 rAF：跨过 commit 边界，确保 transition 一定触发
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         ghost.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
@@ -279,23 +261,7 @@ function flyTile(type, src, toRect) {
     ghost.addEventListener('transitionend', (e) => {
       if (e.propertyName === 'transform') cleanup();
     });
-    // 兜底（CSS 是 0.32s，留 80ms 余量）
     setTimeout(cleanup, 400);
-  });
-}
-
-function fireConfettiAt(el) {
-  if (!window.confetti || !el) return;
-  const r = el.getBoundingClientRect();
-  const x = (r.left + r.width / 2) / window.innerWidth;
-  const y = (r.top + r.height / 2) / window.innerHeight;
-  window.confetti({
-    particleCount: 60,
-    spread: 70,
-    startVelocity: 35,
-    origin: { x, y },
-    scalar: 0.8,
-    ticks: 120,
   });
 }
 
@@ -304,9 +270,7 @@ function finishTurn() {
     stopTimer();
     sfxWin();
     haptic('win');
-    if (window.confetti) {
-      window.confetti({ particleCount: 160, spread: 100, origin: { y: 0.6 } });
-    }
+    fireWinConfetti();
     track('level_win', {
       level_id: state.level.id,
       elapsed_ms: state.elapsedMs,
@@ -315,11 +279,13 @@ function finishTurn() {
       remove3_used: state.itemsUsed?.remove3 || 0,
     });
     markLevelCompleted(save, state.levelIdx);
+    const sec = (state.elapsedMs / 1000).toFixed(1);
     showResultModal(
       {
         won: true,
-        elapsedMs: state.elapsedMs,
         hasNext: state.levelIdx + 1 < LEVELS.length,
+        primaryStat: t('time_used', sec),
+        followUrl: 'https://t.me/tinypaws_games',
       },
       {
         onNext: () => startLevel(state.levelIdx + 1),
@@ -330,9 +296,7 @@ function finishTurn() {
             source: 'win_modal',
             level_id: state.level.id,
           });
-          const url = 'https://t.me/tinypaws_games';
-          if (tg?.openTelegramLink) tg.openTelegramLink(url);
-          else window.open(url, '_blank');
+          openTelegramLink('https://t.me/tinypaws_games');
         },
       },
     );
@@ -349,7 +313,7 @@ function finishTurn() {
       remove3_used: state.itemsUsed?.remove3 || 0,
     });
     showResultModal(
-      { won: false, elapsedMs: state.elapsedMs, hasNext: false },
+      { won: false, hasNext: false, loseSub: t('lost_sub') },
       {
         onRetry: () => startLevel(state.levelIdx),
         onHome: goHome,

@@ -23,7 +23,7 @@ export function renderLevelSelect(save, onPick) {
 
   const list = el('div', 'level-list');
   LEVELS.forEach((lv, i) => {
-    if (i > save.highestUnlocked) return; // 隐藏未解锁
+    if (i > save.highestUnlocked) return;
     const completed = save.completedLevels[i];
     const card = el('button', 'level-card' + (completed ? ' completed' : ''));
     card.style.animationDelay = `${i * 60}ms`;
@@ -84,7 +84,6 @@ export function renderGame(state, handlers) {
   const maxStack = Math.max(...state.level.heights);
   board.style.setProperty('--cols', String(cols));
   board.style.setProperty('--max-stack', String(maxStack));
-  // 自适应堆叠偏移：总上探量稳定在 ~50px（不撞 HUD）
   const offsetPx = Math.min(10, Math.floor(50 / Math.max(1, maxStack - 1)));
   state.stacks.forEach((stack, stackIdx) => {
     const col = el('div', 'col');
@@ -165,42 +164,6 @@ export function redrawTray(state) {
       }
     }
   }
-}
-
-export function showResultModal({ won, elapsedMs, hasNext }, handlers) {
-  const root = $('app');
-  const overlay = el('div', 'modal-overlay');
-  const modal = el('div', 'modal');
-  modal.append(el('div', 'modal-emoji', won ? '🎉' : '😿'));
-  modal.append(el('div', 'modal-title', won ? t('won_title') : t('lost_title')));
-  if (won) {
-    const sec = (elapsedMs / 1000).toFixed(1);
-    modal.append(el('div', 'modal-sub', t('time_used', sec)));
-  } else {
-    modal.append(el('div', 'modal-sub', t('lost_sub')));
-  }
-  const actions = el('div', 'modal-actions');
-  if (won && hasNext) {
-    const next = el('button', 'btn primary', t('btn_next'));
-    next.addEventListener('click', handlers.onNext);
-    actions.append(next);
-  }
-  const retry = el('button', 'btn' + (won ? '' : ' primary'), won ? t('btn_play_again') : t('btn_retry'));
-  retry.addEventListener('click', handlers.onRetry);
-  actions.append(retry);
-  if (won && handlers.onFollow) {
-    const follow = el('button', 'btn follow', t('btn_follow'));
-    follow.addEventListener('click', handlers.onFollow);
-    actions.append(follow);
-  }
-  if (!won) {
-    const home = el('button', 'btn', t('btn_home'));
-    home.addEventListener('click', handlers.onHome);
-    actions.append(home);
-  }
-  modal.append(actions);
-  overlay.append(modal);
-  root.append(overlay);
 }
 
 function el(tag, cls, text) {

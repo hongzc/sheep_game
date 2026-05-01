@@ -1,4 +1,7 @@
-const dict = {
+// sheep 专属字典 + 关卡名 helpers。引擎从 shared/i18n.js 透传。
+import { registerStrings, t, getLocale, setLocale, nextLocale } from './shared/i18n.js';
+
+const sheepStrings = {
   zh: {
     title: 'Triple Pop',
     select_level: '选择关卡',
@@ -9,15 +12,8 @@ const dict = {
     item_undo: '撤销',
     item_shuffle: '洗牌',
     item_remove3: '移出 3',
-    won_title: '通关！',
-    lost_title: '失败了',
     time_used: '用时 {0}s',
     lost_sub: '槽位满了，再来一次？',
-    btn_next: '下一关',
-    btn_play_again: '再玩一次',
-    btn_retry: '重试',
-    btn_home: '关卡选择',
-    btn_follow: '🐾 关注 TinyPaws',
   },
   en: {
     title: 'Triple Pop',
@@ -29,60 +25,14 @@ const dict = {
     item_undo: 'Undo',
     item_shuffle: 'Shuffle',
     item_remove3: 'Remove 3',
-    won_title: 'You Won!',
-    lost_title: 'Game Over',
     time_used: 'Time {0}s',
     lost_sub: 'Tray is full. Try again?',
-    btn_next: 'Next Level',
-    btn_play_again: 'Play Again',
-    btn_retry: 'Retry',
-    btn_home: 'Levels',
-    btn_follow: '🐾 Follow TinyPaws',
   },
 };
 
-const LOCALE_KEY = 'triple_pop_locale_v1';
-const SUPPORTED = ['en', 'zh'];
+registerStrings(sheepStrings);
 
-function loadLocale() {
-  try {
-    const saved = localStorage.getItem(LOCALE_KEY);
-    if (saved && SUPPORTED.includes(saved)) return saved;
-  } catch {
-    // ignore
-  }
-  return 'en';
-}
-
-let currentLocale = loadLocale();
-try { document.documentElement.lang = currentLocale; } catch {}
-
-export function getLocale() {
-  return currentLocale;
-}
-
-export function setLocale(loc) {
-  if (!SUPPORTED.includes(loc)) return;
-  currentLocale = loc;
-  try { localStorage.setItem(LOCALE_KEY, loc); } catch {}
-  try { document.documentElement.lang = loc; } catch {}
-}
-
-export function nextLocale() {
-  return currentLocale === 'en' ? 'zh' : 'en';
-}
-
-export function t(key, ...args) {
-  const tbl = dict[currentLocale] || dict.en;
-  let v = tbl[key];
-  if (v === undefined) v = dict.en[key];
-  if (typeof v === 'string') {
-    args.forEach((a, i) => {
-      v = v.replace(`{${i}}`, String(a));
-    });
-  }
-  return v;
-}
+export { t, getLocale, setLocale, nextLocale };
 
 export function levelName(id) {
   return t('level_names')[id - 1] || `#${id}`;
