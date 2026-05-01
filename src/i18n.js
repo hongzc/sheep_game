@@ -3,7 +3,7 @@ import { registerStrings, t, getLocale, setLocale, nextLocale } from './shared/i
 
 const sheepStrings = {
   zh: {
-    title: 'Triple Pop',
+    title: 'Paw Pop',
     select_level: '选择关卡',
     level_names: ['新手', '入门', '进阶', '挑战', '高手', '大师', '噩梦', '终极'],
     level_prefix: '第 {0} 关',
@@ -16,7 +16,7 @@ const sheepStrings = {
     lost_sub: '槽位满了，再来一次？',
   },
   en: {
-    title: 'Triple Pop',
+    title: 'Paw Pop',
     select_level: 'Select Level',
     level_names: ['Rookie', 'Easy', 'Medium', 'Hard', 'Expert', 'Master', 'Nightmare', 'Ultimate'],
     level_prefix: 'Level {0}',
