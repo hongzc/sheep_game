@@ -18,6 +18,18 @@
       });
     }
   </script>
+  <!-- Telegram Mini Apps Analytics SDK (tApps Center 必需) -->
+  <script async src="https://tganalytics.xyz/index.js" type="text/javascript" onload="initTgAnalytics()"></script>
+  <script>
+    function initTgAnalytics() {
+      try {
+        window.telegramAnalytics.init({
+          token: 'eyJhcHBfbmFtZSI6InBhd19wb3AiLCJhcHBfdXJsIjoiaHR0cHM6Ly90Lm1lL3RpbnlwYXdzX2dhbWVzX2JvdCIsImFwcF9kb21haW4iOiJodHRwczovL3NoZWVwLWdhbWUtdGF3bnkudmVyY2VsLmFwcC8ifQ==!RowDfEy98HIV24vjKg8ESQgIJiVFp7k7CE9TQsGH0Gw=',
+          appName: 'paw_pop',
+        });
+      } catch (e) {}
+    }
+  </script>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
