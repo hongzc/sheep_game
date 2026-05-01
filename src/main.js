@@ -15,6 +15,7 @@ import {
 import {
   renderLevelSelect,
   renderGame,
+  redrawTray,
   showResultModal,
 } from './render.js';
 import {
@@ -225,7 +226,7 @@ function onPick(stackIdx, tileEl) {
       sfxMatch();
       haptic('match');
       fireConfettiAt(document.getElementById('tray'));
-      drawGame();
+      redrawTray(state);
     }
     finishTurn();
   };

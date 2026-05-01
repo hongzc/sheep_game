@@ -144,6 +144,29 @@ function itemBtn(icon, label, count, handler) {
   return b;
 }
 
+export function redrawTray(state) {
+  const trayEl = document.getElementById('tray');
+  if (!trayEl) return;
+  const flyingIds = state.flyingIds || new Set();
+  for (let i = 0; i < TRAY_LIMIT; i++) {
+    const slot = trayEl.children[i];
+    if (!slot) continue;
+    const tile = state.tray[i];
+    while (slot.firstChild) slot.firstChild.remove();
+    slot.classList.remove('filled', 'reserved', 'just-filled');
+    delete slot.dataset.tileId;
+    if (tile) {
+      slot.dataset.tileId = String(tile.id);
+      if (flyingIds.has(tile.id)) {
+        slot.classList.add('reserved');
+      } else {
+        slot.classList.add('filled');
+        slot.append(makeTileContent(tile.type));
+      }
+    }
+  }
+}
+
 export function showResultModal({ won, elapsedMs, hasNext }, handlers) {
   const root = $('app');
   const overlay = el('div', 'modal-overlay');
