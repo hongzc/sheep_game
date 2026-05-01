@@ -178,6 +178,13 @@ function onPick(stackIdx, tileEl) {
   tileEl.style.visibility = 'hidden';
   tileEl.classList.remove('top');
 
+  // 立刻把下一张提升为新 top（不等飞行结束），用户飞行期间也能继续点
+  const prevSibling = tileEl.previousElementSibling;
+  if (prevSibling && prevSibling.classList.contains('tile')) {
+    prevSibling.classList.add('top');
+    prevSibling.addEventListener('click', () => onPick(stackIdx, prevSibling));
+  }
+
   const trayEl = document.getElementById('tray');
   const trayIdx = state.tray.length - 1;
   const slot = trayEl?.children[trayIdx];
@@ -206,17 +213,11 @@ function onPick(stackIdx, tileEl) {
       setTimeout(() => landed.classList.remove('just-filled'), 280);
     }
 
-    // board 列：移除已隐藏的旧 top，把下一张提升为新 top 并挂上 click
+    // board 列：飞行结束，移除已隐藏的旧 top；新 top 已在 onPick 时升级好
     if (tileEl.parentElement) {
       const col = tileEl.parentElement;
       col.removeChild(tileEl);
-      const newTop = col.lastElementChild;
-      if (newTop && newTop.classList.contains('tile')) {
-        newTop.classList.add('top');
-        newTop.addEventListener('click', () => onPick(stackIdx, newTop));
-      } else {
-        col.classList.add('empty');
-      }
+      if (col.children.length === 0) col.classList.add('empty');
     }
 
     const matched = applyResolution(state);
