@@ -173,23 +173,52 @@ function onPick(stackIdx, tileEl) {
 
   sfxPick();
   haptic('pick');
-  drawGame();
+
+  // 外科手术式更新：不重建 board DOM，避免 iOS 在 pointerdown/pointerup 间吞 click
+  tileEl.style.visibility = 'hidden';
+  tileEl.classList.remove('top');
+
+  const trayEl = document.getElementById('tray');
+  const trayIdx = state.tray.length - 1;
+  const slot = trayEl?.children[trayIdx];
+  if (slot) {
+    slot.dataset.tileId = String(tile.id);
+    slot.classList.add('reserved');
+    slot.classList.remove('filled', 'just-filled');
+    while (slot.firstChild) slot.firstChild.remove();
+  }
 
   const tileId = tile.id;
-  const slot = document.querySelector(`#tray .slot[data-tile-id="${tileId}"]`);
+  const tileType = tile.type;
 
   const onArrived = () => {
     if (!state) return;
     state.flyingIds.delete(tileId);
-    drawGame();
-    // 落地动画：找到刚渲染好的 slot 加 just-filled
+
+    // tray 槽位：reserved → filled
     const landed = document.querySelector(
       `#tray .slot[data-tile-id="${tileId}"]`,
     );
     if (landed) {
-      landed.classList.add('just-filled');
+      landed.classList.remove('reserved');
+      landed.classList.add('filled', 'just-filled');
+      landed.append(makeTileContent(tileType));
       setTimeout(() => landed.classList.remove('just-filled'), 280);
     }
+
+    // board 列：移除已隐藏的旧 top，把下一张提升为新 top 并挂上 click
+    if (tileEl.parentElement) {
+      const col = tileEl.parentElement;
+      col.removeChild(tileEl);
+      const newTop = col.lastElementChild;
+      if (newTop && newTop.classList.contains('tile')) {
+        newTop.classList.add('top');
+        newTop.addEventListener('click', () => onPick(stackIdx, newTop));
+      } else {
+        col.classList.add('empty');
+      }
+    }
+
     const matched = applyResolution(state);
     if (matched) {
       sfxMatch();
