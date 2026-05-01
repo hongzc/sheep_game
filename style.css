@@ -430,13 +430,11 @@ body::before {
     0 6px 14px rgba(80, 30, 120, 0.22);
 }
 
-.tile.top:active {
-  transform: scale(0.92) !important;
-  transition: transform 0.08s ease-out;
-}
-
-.tile.top:active .tile-img {
-  transform: scale(0.94);
+/* 注意：不要在外层 .tile 上改 transform —— 会覆盖 inline translateY，
+   导致 tile 在 touchstart 瞬间下移，iOS 判定 target 移位、取消 click。
+   按压视觉只缩小内层。*/
+.tile.top:active .tile-inner {
+  transform: scale(0.92);
   transition: transform 0.08s ease-out;
 }
 
